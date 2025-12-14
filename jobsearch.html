@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic Career Hunter</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; 
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+        
+        // --- DATA: Company Database ---
+        const COMPANY_DB = [
+            { name: "Google", url: "https://careers.google.com/", tags: ["python", "c++", "ai", "search", "golang"], industry: "Big Tech", tier: "Tier 1" },
+            { name: "Microsoft", url: "https://careers.microsoft.com/", tags: ["c#", ".net", "azure", "ai", "enterprise"], industry: "Big Tech", tier: "Tier 1" },
+            { name: "Amazon", url: "https://www.amazon.jobs/", tags: ["java", "aws", "ecommerce", "operations", "c++"], industry: "Big Tech", tier: "Tier 1" },
+            { name: "Meta", url: "https://www.metacareers.com/", tags: ["react", "python", "php", "social", "ai"], industry: "Big Tech", tier: "Tier 1" },
+            { name: "Netflix", url: "https://jobs.netflix.com/", tags: ["java", "springboot", "react", "streaming", "aws"], industry: "Entertainment", tier: "Tier 1" },
+            { name: "Apple", url: "https://www.apple.com/careers/", tags: ["swift", "hardware", "c++", "consumer", "ios"], industry: "Consumer Electronics", tier: "Tier 1" },
+            { name: "Uber", url: "https://www.uber.com/us/en/careers/", tags: ["go", "java", "mobility", "logistics", "kafka"], industry: "Gig Economy", tier: "Tier 1" },
+            { name: "Airbnb", url: "https://careers.airbnb.com/", tags: ["ruby", "react", "travel", "hospitality"], industry: "Travel", tier: "Tier 1" },
+            { name: "Stripe", url: "https://stripe.com/jobs", tags: ["ruby", "fintech", "payments", "api", "react"], industry: "Fintech", tier: "Tier 1" },
+            { name: "Coinbase", url: "https://www.coinbase.com/careers", tags: ["crypto", "blockchain", "go", "react", "security"], industry: "Crypto", tier: "Tier 2" },
+            { name: "Tesla", url: "https://www.tesla.com/careers", tags: ["manufacturing", "ai", "hardware", "c++", "automotive"], industry: "Automotive", tier: "Tier 1" },
+            { name: "Spotify", url: "https://www.lifeatspotify.com/", tags: ["java", "music", "audio", "data", "scrum"], industry: "Entertainment", tier: "Tier 2" },
+            { name: "Shopify", url: "https://www.shopify.com/careers", tags: ["ruby", "rails", "ecommerce", "remote", "react"], industry: "Ecommerce", tier: "Tier 2" },
+            { name: "Adobe", url: "https://careers.adobe.com/", tags: ["creative", "saas", "c++", "java", "ai"], industry: "SaaS", tier: "Tier 1" },
+            { name: "Salesforce", url: "https://careers.salesforce.com/", tags: ["crm", "java", "cloud", "apex", "enterprise"], industry: "SaaS", tier: "Tier 1" },
+            { name: "Oracle", url: "https://www.oracle.com/corporate/careers/", tags: ["database", "java", "cloud", "enterprise"], industry: "Enterprise", tier: "Tier 2" },
+            { name: "Atlassian", url: "https://www.atlassian.com/company/careers", tags: ["java", "react", "productivity", "jira", "saas"], industry: "SaaS", tier: "Tier 2" },
+            { name: "Twilio", url: "https://www.twilio.com/company/jobs", tags: ["api", "java", "communications", "go"], industry: "SaaS", tier: "Tier 2" },
+            { name: "Zoom", url: "https://careers.zoom.us/", tags: ["video", "c++", "communication", "saas"], industry: "SaaS", tier: "Tier 2" },
+            { name: "Robinhood", url: "https://careers.robinhood.com/", tags: ["fintech", "python", "django", "mobile"], industry: "Fintech", tier: "Tier 2" },
+            { name: "DoorDash", url: "https://careers.doordash.com/", tags: ["logistics", "kotlin", "swift", "python"], industry: "Gig Economy", tier: "Tier 2" },
+            { name: "Dropbox", url: "https://www.dropbox.com/jobs", tags: ["python", "go", "storage", "cloud"], industry: "SaaS", tier: "Tier 2" },
+            { name: "Slack", url: "https://slack.com/careers", tags: ["messaging", "php", "hack", "react"], industry: "SaaS", tier: "Tier 2" },
+            { name: "Palantir", url: "https://www.palantir.com/careers/", tags: ["data", "defense", "java", "typescript"], industry: "Big Data", tier: "Tier 1" },
+            { name: "Datadog", url: "https://www.datadoghq.com/careers/", tags: ["monitoring", "go", "cloud", "devops"], industry: "SaaS", tier: "Tier 2" },
+            { name: "Snowflake", url: "https://careers.snowflake.com/", tags: ["data", "cloud", "sql", "java"], industry: "Big Data", tier: "Tier 2" },
+            { name: "Goldman Sachs", url: "https://www.goldmansachs.com/careers/", tags: ["finance", "java", "slang", "banking"], industry: "Finance", tier: "Tier 2" },
+            { name: "JPMorgan Chase", url: "https://careers.jpmorgan.com/", tags: ["finance", "java", "python", "banking"], industry: "Finance", tier: "Tier 2" },
+            { name: "Walmart Global Tech", url: "https://careers.walmart.com/technology", tags: ["retail", "java", "react", "supply chain"], industry: "Retail", tier: "Tier 2" },
+            { name: "Target", url: "https://jobs.target.com/category/technology-jobs", tags: ["retail", "java", "kotlin", "minneapolis"], industry: "Retail", tier: "Tier 3" },
+            { name: "Dell", url: "https://jobs.dell.com/", tags: ["hardware", "cloud", "sales", "enterprise"], industry: "Hardware", tier: "Tier 3" },
+            { name: "Intel", url: "https://jobs.intel.com/", tags: ["semiconductor", "hardware", "c++", "research"], industry: "Hardware", tier: "Tier 2" },
+            { name: "IBM", url: "https://www.ibm.com/careers/", tags: ["cloud", "consulting", "mainframe", "java"], industry: "Enterprise", tier: "Tier 2" },
+            { name: "Accenture", url: "https://www.accenture.com/us-en/careers", tags: ["consulting", "service", "java", "enterprise"], industry: "Service", tier: "Tier 3" },
+            { name: "Infosys", url: "https://www.infosys.com/careers/", tags: ["service", "consulting", "java", "india"], industry: "Service", tier: "Tier 3" },
+            { name: "TCS", url: "https://www.tcs.com/careers", tags: ["service", "consulting", "java", "india"], industry: "Service", tier: "Tier 3" },
+            { name: "Wipro", url: "https://careers.wipro.com/", tags: ["service", "consulting", "india"], industry: "Service", tier: "Tier 3" },
+            { name: "Cisco", url: "https://jobs.cisco.com/", tags: ["networking", "hardware", "python", "security"], industry: "Hardware", tier: "Tier 2" },
+            { name: "Nvidia", url: "https://www.nvidia.com/en-us/careers/", tags: ["ai", "graphics", "c++", "hardware", "cuda"], industry: "Hardware", tier: "Tier 1" },
+            { name: "AMD", url: "https://careers.amd.com/", tags: ["semiconductor", "hardware", "c++"], industry: "Hardware", "tier": "Tier 2" },
+            { name: "Samsung", url: "https://www.samsung.com/us/careers/", tags: ["mobile", "hardware", "android", "consumer"], industry: "Consumer Electronics", tier: "Tier 2" },
+            { name: "Sony", url: "https://www.sony.com/en_us/SCA/careers/overview.html", tags: ["entertainment", "hardware", "japan"], industry: "Consumer Electronics", tier: "Tier 3" },
+            { name: "Booking.com", url: "https://careers.booking.com/", tags: ["travel", "java", "perl", "europe"], industry: "Travel", tier: "Tier 2" },
+            { name: "Expedia", url: "https://careers.expediagroup.com/", tags: ["travel", "java", "react", "aws"], industry: "Travel", tier: "Tier 2" },
+            { name: "Flipkart", url: "https://www.flipkartcareers.com/", tags: ["ecommerce", "java", "india", "retail"], industry: "Ecommerce", tier: "Tier 2" },
+            { name: "Zomato", url: "https://www.zomato.com/careers", tags: ["food", "india", "consumer", "app"], industry: "Gig Economy", tier: "Tier 3" },
+            { name: "Swiggy", url: "https://careers.swiggy.com/", tags: ["food", "logistics", "india", "java"], industry: "Gig Economy", tier: "Tier 3" },
+            { name: "Paytm", url: "https://paytm.com/careers", tags: ["fintech", "payments", "india", "java"], industry: "Fintech", tier: "Tier 3" },
+            { name: "Zoho", url: "https://www.zoho.com/careers/", tags: ["saas", "india", "product", "java"], industry: "SaaS", tier: "Tier 3" },
+            { name: "Freshworks", url: "https://www.freshworks.com/company/careers/", tags: ["saas", "india", "customer", "ruby"], industry: "SaaS", tier: "Tier 3" }
+        ];
+
+        // --- COMPONENTS ---
+
+        // Modified Icon component to safely handle DOM manipulation by Lucide
+        const Icon = ({ name, size = 16, className }) => {
+            const wrapperRef = useRef(null);
+
+            useEffect(() => {
+                if (!wrapperRef.current) return;
+                wrapperRef.current.innerHTML = '';
+                const i = document.createElement('i');
+                i.setAttribute('data-lucide', name);
+                if (className) i.setAttribute('class', className);
+                i.setAttribute('width', size);
+                i.setAttribute('height', size);
+                wrapperRef.current.appendChild(i);
+                lucide.createIcons({
+                    root: wrapperRef.current,
+                    nameAttr: 'data-lucide',
+                    attrs: {
+                        class: className,
+                        width: size,
+                        height: size
+                    }
+                });
+            }, [name, size, className]);
+
+            return <span ref={wrapperRef} style={{ display: 'inline-flex', verticalAlign: 'middle' }} />;
+        };
+
+        const InfoModal = ({ onClose }) => (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 p-4">
+                <div className="bg-slate-800 border border-slate-600 rounded-xl p-6 max-w-md w-full shadow-2xl animate-fade-in">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                            <Icon name="alert-triangle" className="text-yellow-500" />
+                            Enable Pop-ups
+                        </h3>
+                        <button onClick={onClose} className="text-slate-400 hover:text-white"><Icon name="x" /></button>
+                    </div>
+                    <p className="text-slate-300 mb-4">
+                        To open multiple company pages at once, your browser needs permission. 
+                        Browsers block "bulk opening" to prevent spam.
+                    </p>
+                    <div className="bg-slate-900 p-3 rounded mb-4 text-sm text-slate-400 border border-slate-700">
+                        <p className="mb-2"><strong className="text-white">Solution:</strong> Look for a blocked popup icon in your address bar (usually right side) after clicking "Open Selected".</p>
+                        <p>Select <strong>"Always allow pop-ups and redirects from this site"</strong>.</p>
+                    </div>
+                    <button 
+                        onClick={onClose}
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-medium transition-colors"
+                    >
+                        Got it
+                    </button>
+                </div>
+            </div>
+        );
+
+        function App() {
+            // State
+            const [rawInput, setRawInput] = useState("");
+            const [processedData, setProcessedData] = useState([]);
+            const [selectedCompanies, setSelectedCompanies] = useState(new Set());
+            const [userProfile, setUserProfile] = useState({
+                techStack: "",
+                experience: "Junior",
+                industry: "Any"
+            });
+            const [showModal, setShowModal] = useState(false);
+            const [isProcessing, setIsProcessing] = useState(false);
+            
+            // Pagination States
+            const [currentPage, setCurrentPage] = useState(1);
+            const [itemsPerPage, setItemsPerPage] = useState(10); 
+            const ITEMS_PER_PAGE_OPTIONS = [5, 10, 25, 50];
+
+            // Mock "AI" Analysis Logic
+            const analyzeAndMatch = (companies) => {
+                const stackKeywords = userProfile.techStack.toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
+                const industryPref = userProfile.industry.toLowerCase();
+                
+                return companies.map(company => {
+                    let score = 50; // Base score
+                    let reasons = [];
+
+                    // DB Lookup
+                    const dbMatch = COMPANY_DB.find(c => c.name.toLowerCase().includes(company.name.toLowerCase()) || company.name.toLowerCase().includes(c.name.toLowerCase()));
+                    
+                    let finalUrl = company.url;
+                    let tags = [];
+                    let industry = "Unknown";
+                    
+                    const stableId = company.id; // Use the pre-calculated unique ID
+                    
+                    if (dbMatch) {
+                        finalUrl = dbMatch.url;
+                        tags = dbMatch.tags;
+                        industry = dbMatch.industry;
+                        score += 10; // Verified company bonus
+                    } else {
+                        // Fallback URL generation
+                        finalUrl = `https://www.google.com/search?q=${encodeURIComponent(company.name + " career page")}&btnI`;
+                        reasons.push("Unknown company - generating search link");
+                    }
+
+                    // Tech Stack Scoring
+                    if (stackKeywords.length > 0 && tags.length > 0) {
+                        const matches = tags.filter(tag => stackKeywords.some(k => tag.includes(k) || k.includes(tag)));
+                        if (matches.length > 0) {
+                            score += matches.length * 15;
+                            reasons.push(`Matches skills: ${matches.join(", ")}`);
+                        }
+                    }
+
+                    // Industry Scoring
+                    if (industryPref !== "any" && industry.toLowerCase().includes(industryPref)) {
+                        score += 20;
+                        reasons.push(`Matches industry: ${industry}`);
+                    }
+
+                    // Experience/Tier heuristics (Simplistic)
+                    if (userProfile.experience === "Senior" && dbMatch && dbMatch.tier === "Tier 1") {
+                        score += 10;
+                        reasons.push("High tier matches senior profile");
+                    }
+                    if (userProfile.experience === "Junior" && dbMatch && dbMatch.tier === "Tier 3") {
+                        score += 10;
+                        reasons.push("Good entry-level opportunities");
+                    }
+
+                    return {
+                        id: stableId, // Use the unique ID
+                        // Use DB name for display consistency if a match is found
+                        name: dbMatch ? dbMatch.name : company.name, 
+                        url: finalUrl,
+                        score: Math.min(score, 100),
+                        reasons: reasons,
+                        tags: tags,
+                        industry: industry,
+                        isVerified: !!dbMatch
+                    };
+                }).sort((a, b) => b.score - a.score);
+            };
+
+            const handleProcess = () => {
+                setIsProcessing(true);
+                // Simulate processing delay for "AI" feel
+                setTimeout(() => {
+                    const names = rawInput.split(/\n|,/).map(s => s.trim()).filter(s => s.length > 1);
+                    
+                    // Remove duplicates case-insensitively while preserving order of first appearance
+                    const uniqueMap = new Map();
+                    names.forEach(name => {
+                         // Use the lowercase, alphanumeric-only version of the input name as the unique key
+                         const key = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                         if(!uniqueMap.has(key)) uniqueMap.set(key, name);
+                    });
+                    
+                    // Map unique names to initial data objects, generating a unique ID based on the input name
+                    const initialData = Array.from(uniqueMap.values()).map(name => ({ 
+                        name, 
+                        url: "", 
+                        id: name.toLowerCase().replace(/[^a-z0-9]/g, '') // Generate unique ID here
+                    }));
+                    
+                    const analyzed = analyzeAndMatch(initialData);
+                    setProcessedData(analyzed);
+                    setIsProcessing(false);
+                    setCurrentPage(1); // Reset page on new data load
+                    // Select top 10 by default
+                    const top10Ids = analyzed.slice(0, 10).map(c => c.id);
+                    setSelectedCompanies(new Set(top10Ids));
+                }, 600);
+            };
+
+            // Re-run analysis when profile changes, but only if we have data
+            useEffect(() => {
+                if (processedData.length > 0) {
+                    // When re-analyzing, we pass the current processedData (which contains the stable ID)
+                    const reAnalyzed = analyzeAndMatch(processedData); 
+                    setProcessedData(reAnalyzed);
+                    setCurrentPage(1); // Reset to first page on re-sort/re-filter
+                }
+            }, [userProfile.techStack, userProfile.experience, userProfile.industry]);
+
+            const toggleSelection = (id) => {
+                const newSet = new Set(selectedCompanies);
+                if (newSet.has(id)) newSet.delete(id);
+                else newSet.add(id);
+                setSelectedCompanies(newSet);
+            };
+
+            const selectAll = () => {
+                // Get IDs only for companies on the current page
+                const currentData = paginatedData.map(c => c.id);
+                
+                // If all current page items are selected, deselect them. Otherwise, select all.
+                const allSelectedOnPage = currentData.every(id => selectedCompanies.has(id));
+                const newSelectedCompanies = new Set(selectedCompanies);
+
+                if (allSelectedOnPage) {
+                    currentData.forEach(id => newSelectedCompanies.delete(id));
+                } else {
+                    currentData.forEach(id => newSelectedCompanies.add(id));
+                }
+
+                setSelectedCompanies(newSelectedCompanies);
+            };
+
+            const openSelected = () => {
+                const toOpen = processedData.filter(c => selectedCompanies.has(c.id));
+                if (toOpen.length > 5 && !localStorage.getItem("popupWarningShown")) {
+                    // Show warning modal first time they try to open many
+                    setShowModal(true);
+                    localStorage.setItem("popupWarningShown", "true");
+                    return;
+                }
+                
+                let count = 0;
+                toOpen.forEach((company) => {
+                    // Small delay to try and be nicer to the browser, though modern blockers are strict
+                    setTimeout(() => {
+                        window.open(company.url, '_blank');
+                    }, count * 300);
+                    count++;
+                });
+            };
+
+            // --- PAGINATION LOGIC ---
+            const totalItems = processedData.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedData = processedData.slice(startIndex, endIndex);
+
+            // Check if all items on the current page are selected
+            const allCurrentPageSelected = paginatedData.length > 0 && 
+                paginatedData.every(c => selectedCompanies.has(c.id));
+
+
+            const PaginationControls = () => {
+                if (totalPages <= 1) return (
+                    <div className="flex justify-start items-center p-4 border-t border-slate-700 bg-slate-800/50">
+                         <ItemsPerPageSelector />
+                    </div>
+                );
+
+                return (
+                    <div className="flex flex-col md:flex-row justify-between items-center mt-auto p-4 border-t border-slate-700 bg-slate-800/50">
+                        <ItemsPerPageSelector />
+
+                        {/* Page Navigation */}
+                        <div className="flex items-center space-x-3 mt-3 md:mt-0">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="px-3 py-1 text-sm rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 transition-colors text-slate-300"
+                            >
+                                <Icon name="chevron-left" size={14} className="inline-block mr-1" />
+                                Previous
+                            </button>
+
+                            <span className="text-sm font-medium text-slate-300">
+                                Page {currentPage} of {totalPages}
+                            </span>
+
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                                className="px-3 py-1 text-sm rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 transition-colors text-slate-300"
+                            >
+                                Next
+                                <Icon name="chevron-right" size={14} className="inline-block ml-1" />
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+
+            const ItemsPerPageSelector = () => (
+                <div className="flex items-center text-sm text-slate-400">
+                    Show
+                    <select 
+                        value={itemsPerPage} 
+                        onChange={(e) => {
+                            setItemsPerPage(Number(e.target.value));
+                            setCurrentPage(1); // Reset page when items per page changes
+                        }}
+                        className="mx-2 bg-slate-700 border border-slate-600 rounded-md py-1 px-2 text-slate-300 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        {ITEMS_PER_PAGE_OPTIONS.map(num => (
+                            <option key={num} value={num}>{num}</option>
+                        ))}
+                    </select>
+                    results
+                </div>
+            );
+
+
+            return (
+                <div className="min-h-screen p-4 md:p-8 relative overflow-x-hidden">
+                    {/* Background decoration */}
+                    <div className="fixed top-0 left-0 w-full h-full -z-10 bg-gradient-to-br from-slate-900 via-[#0f172a] to-slate-900"></div>
+                    <div className="fixed top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-pulse"></div>
+                    <div className="fixed bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-purple-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-pulse"></div>
+
+                    {showModal && <InfoModal onClose={() => { setShowModal(false); }} />}
+
+                    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        
+                        {/* HEADER */}
+                        <div className="lg:col-span-12 flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                            <div>
+                                <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                                    Agentic Career Hunter
+                                </h1>
+                                <p className="text-slate-400 mt-1">Bulk process companies, get AI recommendations, and apply faster.</p>
+                            </div>
+                            <div className="flex gap-3">
+                                <button onClick={() => setShowModal(true)} className="text-xs text-slate-500 hover:text-slate-300 underline">
+                                    Popup Issues?
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* LEFT COLUMN: Input & AI Agent Profile */}
+                        <div className="lg:col-span-4 space-y-6">
+                            
+                            {/* Input Panel */}
+                            <div className="glass-panel rounded-xl p-5 border-l-4 border-l-blue-500 shadow-lg">
+                                <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+                                    <Icon name="database" className="text-blue-400" />
+                                    Input Companies
+                                </h2>
+                                <p className="text-xs text-slate-400 mb-2">Paste list (Excel, Text, LinkedIn export)</p>
+                                <textarea
+                                    className="w-full h-48 bg-slate-800/50 border border-slate-600 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none font-mono text-slate-300"
+                                    placeholder="Google&#10;Amazon&#10;Microsoft&#10;Unknown Startup Inc..."
+                                    value={rawInput}
+                                    onChange={(e) => setRawInput(e.target.value)}
+                                ></textarea>
+                                <button
+                                    onClick={handleProcess}
+                                    disabled={isProcessing || !rawInput.trim()}
+                                    className={`w-full mt-4 py-3 rounded-lg font-bold shadow-lg flex justify-center items-center gap-2 transition-all
+                                        ${isProcessing || !rawInput.trim() ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white transform hover:scale-[1.02]'}`}
+                                >
+                                    {isProcessing ? (
+                                        <>
+                                            <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                                            Processing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Icon name="search" />
+                                            Find Career Pages
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* AI Agent Panel */}
+                            <div className="glass-panel rounded-xl p-5 border-l-4 border-l-purple-500 shadow-lg">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h2 className="text-xl font-semibold flex items-center gap-2">
+                                        <Icon name="bot" className="text-purple-400" />
+                                        AI Job Assistant
+                                    </h2>
+                                    <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full border border-purple-500/30">Active</span>
+                                </div>
+                                <p className="text-sm text-slate-400 mb-4">
+                                    I'll rank the companies based on your profile preferences.
+                                </p>
+                                
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs uppercase tracking-wider text-slate-500 font-bold">Your Tech Stack</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full mt-1 bg-slate-800/50 border border-slate-600 rounded px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                                            placeholder="e.g. React, Java, AWS, Python"
+                                            value={userProfile.techStack}
+                                            onChange={(e) => setUserProfile({...userProfile, techStack: e.target.value})}
+                                        />
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs uppercase tracking-wider text-slate-500 font-bold">Experience</label>
+                                            <select 
+                                                className="w-full mt-1 bg-slate-800/50 border border-slate-600 rounded px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                                                value={userProfile.experience}
+                                                onChange={(e) => setUserProfile({...userProfile, experience: e.target.value})}
+                                            >
+                                                <option value="Junior">Junior (0-2y)</option>
+                                                <option value="Mid">Mid (2-5y)</option>
+                                                <option value="Senior">Senior (5y+)</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs uppercase tracking-wider text-slate-500 font-bold">Field</label>
+                                            <select 
+                                                className="w-full mt-1 bg-slate-800/50 border border-slate-600 rounded px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                                                value={userProfile.industry}
+                                                onChange={(e) => setUserProfile({...userProfile, industry: e.target.value})}
+                                            >
+                                                <option value="Any">Any</option>
+                                                <option value="Fintech">Fintech</option>
+                                                <option value="SaaS">SaaS</option>
+                                                <option value="Big Tech">Big Tech</option>
+                                                <option value="Hardware">Hardware</option>
+                                                <option value="Startups">Startups</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* RIGHT COLUMN: Results Grid */}
+                        <div className="lg:col-span-8 flex flex-col h-[80vh]"> {/* Set a fixed height for better scroll management */}
+                            {processedData.length > 0 ? (
+                                <div className="glass-panel rounded-xl flex flex-col h-full shadow-lg overflow-hidden animate-fade-in">
+                                    {/* Toolbar */}
+                                    <div className="p-4 border-b border-slate-700 bg-slate-800/50 flex justify-between items-center sticky top-0 z-10">
+                                        <div className="flex items-center gap-3">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={allCurrentPageSelected}
+                                                onChange={selectAll}
+                                                className="w-5 h-5 rounded border-slate-500 text-blue-600 bg-slate-700 focus:ring-blue-500 focus:ring-offset-slate-800"
+                                            />
+                                            <span className="text-sm font-medium text-slate-300">
+                                                {selectedCompanies.size} selected of {totalItems} total
+                                            </span>
+                                        </div>
+                                        <button 
+                                            onClick={openSelected}
+                                            disabled={selectedCompanies.size === 0}
+                                            className={`px-6 py-2 rounded-lg font-bold text-sm shadow-lg flex items-center gap-2 transition-all
+                                                ${selectedCompanies.size === 0 
+                                                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed' 
+                                                    : 'bg-green-600 hover:bg-green-500 text-white hover:shadow-green-500/20'}`}
+                                        >
+                                            <Icon name="external-link" size={16} />
+                                            Open Selected ({selectedCompanies.size})
+                                        </button>
+                                    </div>
+
+                                    {/* Table Header */}
+                                    <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-900/50 text-xs font-bold text-slate-400 uppercase tracking-wider sticky top-16 z-10">
+                                        <div className="col-span-4">Company</div>
+                                        <div className="col-span-2">Match Score</div>
+                                        <div className="col-span-4">Agent Insights</div>
+                                        <div className="col-span-2 text-right">Action</div>
+                                    </div>
+
+                                    {/* List Container - Scrollable part */}
+                                    <div className="overflow-y-auto flex-1 p-2">
+                                        {paginatedData.map((company) => (
+                                            <div 
+                                                key={company.id} 
+                                                className={`grid grid-cols-12 gap-4 px-4 py-3 mb-1 rounded-lg items-center transition-colors border border-transparent
+                                                    ${selectedCompanies.has(company.id) ? 'bg-blue-900/20 border-blue-500/30' : 'hover:bg-slate-800/50 hover:border-slate-700'}`}
+                                            >
+                                                {/* Company Name & Checkbox */}
+                                                <div className="col-span-4 flex items-center gap-3">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={selectedCompanies.has(company.id)}
+                                                        onChange={() => toggleSelection(company.id)}
+                                                        className="w-4 h-4 rounded border-slate-500 text-blue-600 bg-slate-700 focus:ring-offset-slate-900"
+                                                    />
+                                                    <div>
+                                                        <div className="font-bold text-white flex items-center gap-2">
+                                                            {company.name}
+                                                            {!company.isVerified && <span className="text-[10px] px-1 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 rounded">Not in DB</span>}
+                                                        </div>
+                                                        <div className="text-xs text-slate-400 truncate w-32 md:w-48">{company.industry}</div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Score */}
+                                                <div className="col-span-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                                                            <div 
+                                                                className={`h-full ${company.score > 80 ? 'bg-green-500' : company.score > 60 ? 'bg-blue-500' : 'bg-slate-500'}`} 
+                                                                style={{ width: `${company.score}%` }}
+                                                            ></div>
+                                                        </div>
+                                                        <span className="text-xs font-mono font-bold">{company.score}</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Insights */}
+                                                <div className="col-span-4 text-xs">
+                                                    {company.reasons.length > 0 ? (
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {company.reasons.slice(0, 2).map((r, i) => (
+                                                                <span key={i} className="px-1.5 py-0.5 bg-slate-700 text-slate-300 rounded text-[10px] truncate max-w-full">
+                                                                    {r}
+                                                                </span>
+                                                            ))}
+                                                            {company.reasons.length > 2 && <span className="text-slate-500">+{company.reasons.length - 2} more</span>}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-slate-600 italic">No specific match data</span>
+                                                    )}
+                                                </div>
+
+                                                {/* Action */}
+                                                <div className="col-span-2 text-right">
+                                                    <a 
+                                                        href={company.url} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-400 hover:text-blue-300 text-sm font-medium hover:underline flex items-center justify-end gap-1"
+                                                    >
+                                                        Visit <Icon name="external-link" size={12} />
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    
+                                    {/* Pagination Controls */}
+                                    <PaginationControls />
+                                </div>
+                            ) : (
+                                /* Empty State */
+                                <div className="glass-panel rounded-xl flex flex-col items-center justify-center h-full text-slate-500 border-dashed border-2 border-slate-700">
+                                    <Icon name="layout-list" size={48} className="mb-4 opacity-50" />
+                                    <h3 className="text-lg font-medium text-slate-300">No Companies Loaded</h3>
+                                    <p className="max-w-md text-center mt-2">
+                                        Paste a list of companies on the left to get started. 
+                                        I'll analyze them and find their career pages automatically.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                    </div>
+                    
+                    {/* Status Footer */}
+                    <div className="fixed bottom-0 left-0 w-full bg-slate-900 border-t border-slate-800 p-2 text-center text-xs text-slate-500 z-50">
+                        <span className="mr-4">Database: {COMPANY_DB.length} verified companies</span>
+                        <span>Use Chrome/Edge/Firefox on Desktop for best bulk-open performance.</span>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
